@@ -1,6 +1,8 @@
 
 import numpy
 import csv
+import pickle
+from autokeras.supervised import Supervised
 
 #function to tokenize words
 dict = {'-':0}
@@ -14,11 +16,11 @@ def tokenize(arrStr):
             dict.update({str:len(dict)})
             res.append(dict[str])
     return res
-    
-if __name__== '__main__':
+
+def cleanData(fileName):
     # main data cleaning 
     data =[]
-    with open('raw.csv') as csvfile:
+    with open(fileName) as csvfile:
          spamreader = csv.DictReader(csvfile)
          for row in spamreader:
              # remove all the values which has nul iron ore value
@@ -42,10 +44,23 @@ if __name__== '__main__':
     #tokenize data to convert word data to int
     for y in [0,1,2,3,5,6,7,8,10,11,13,14,15,16,17] :
         npData[:,y]=tokenize(npData[:,y])
+    file_Name = "pickleFile"
+    
+    # open the file to save data (pickle)
+    fileObject = open(file_Name,'wb') 
+    pickle.dump(npData,fileObject)   
+    fileObject.close()        
         
-    #npData[:,0]= tokenize(npData[:,0])
-    print(npData[0:50,:])
+def getData(fileName):
+    fileObject = open(fileName,'r')  
+    return pickle.load(fileObject)
+    
+if __name__== '__main__':
+
+    cleanData('raw.csv')
+    dataset = getData('pickleFile')    
     
     # split into input (X) and output (Y) variables
-    #X = dataset[:,0:6]
-    #Y = dataset[:,6]
+    X = dataset[:,0:17]
+    Y = dataset[:,17]
+    print(dataset[0:50,:])
