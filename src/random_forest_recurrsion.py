@@ -2,7 +2,7 @@ from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import load_iris
 import pickle
-
+import numpy as np
 # Random Forest Regression
 class RFR:
 
@@ -35,6 +35,8 @@ class RFR:
             pickle.dump(rfr, handle)
 
     def predict_model(self, X):
+        with open('data/rfr_model.pickle', 'rb') as handle:
+            rfr = pickle.load(handle)
         prediction = rfr.predict(X)
         return prediction
 
@@ -43,8 +45,18 @@ class RFR:
             rfr = pickle.load(handle)
         return rfr.score(X, y)
 
-iris = load_iris()
-rfr = RFR()
-#rfr.find_optimal_hyp(iris['data'], iris['target'])
-#rfr.train_model(iris['data'], iris['target'])
-print(rfr.score_model(iris['data'], iris['target']))
+if __name__== '__main__':
+    with open('data/Stats.pickle', 'rb') as handle:
+        data = pickle.load(handle)
+
+    rfr = RFR()
+    data = data.astype(np.float64)
+    X = data[::-1,:11]
+    y = data[::-1,11]
+    print(X[100])
+    print(y[100])
+    #rfr.find_optimal_hyp(X, y)
+    #rfr.train_model(X, y)
+    test = rfr.predict_model(X[100:101,:11])
+    print(test)
+    #print(rfr.score_model(X, y))
