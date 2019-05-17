@@ -2,6 +2,15 @@
 import numpy
 import csv
 import pickle
+import datetime
+import requests
+
+
+def get_dollar(year, week):
+    date = datetime.datetime.strptime(year + '-W' + week + '-1', '%G-W%V-%u')
+    result = requests.get(url = 'https://api.exchangeratesapi.io/'+str(date.date())+'?base=INR')
+    data = result.json()
+    return(1/data['rates']['USD'])
 
 
 def make_data(file_name):
@@ -19,6 +28,9 @@ def make_data(file_name):
             if(row['Prices Domestic (Pellet) (in INR/MT)']=='0'):
                 include = False
             if include == True:
+                conversion = get_dollar(row['Year'], row['Week'])
+                print(conversion)
+                row['conversion'] = conversion
                 data.append(row)
 
     #convert dict values to list
@@ -35,8 +47,9 @@ def make_data(file_name):
 
     # open the file to save data (pickle)
     print(np_data)
-    with open('data/Stats.pickle', 'wb') as handle:
+    with open('data/Stats2019_with_cr.pickle', 'wb') as handle:
         pickle.dump(np_data, handle)
 
 if __name__== '__main__':
-    make_data('data/Stats.csv')
+    make_data('data/Stats2019.csv')
+    #get_dollar('2018','1')

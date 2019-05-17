@@ -14,12 +14,13 @@ import pickle
 
 class LSTM:
     def __init__(self):
-        with open('data/Stats.pickle', 'rb') as handle:
+        with open('data/Stats2019.pickle', 'rb') as handle:
             self.data = pickle.load(handle)
+        self.data = self.data[::-1]
         self.data = self.data.astype(numpy.float64)
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.data = self.scaler.fit_transform(self.data)
-        self.look_back = 10
+        self.look_back = 15
         self.features = 11
 
     def create_dataset(self, dataset, look_back, dim):
@@ -35,7 +36,7 @@ class LSTM:
         X, Y = self.create_dataset(self.data, self.look_back, self.features)
         # create and fit the LSTM network
         model = Sequential()
-        model.add(tf_LSTM(4, input_shape=(10, 11)))
+        model.add(tf_LSTM(8, input_shape=(self.look_back, self.features)))
         model.add(Dense(1))
         model.compile(loss='mean_squared_error', optimizer='adam')
         model.fit(X, Y, epochs=100, batch_size=1, verbose=2)
@@ -54,11 +55,12 @@ class LSTM:
         model = load_model('lstm.h5')
         Y_predicted = model.predict(X)
         # invert predictions
-        test = numpy.empty([166,self.features+1])
-        test[:,self.features] = numpy.reshape(Y_predicted, (166))
+        length = len(Y)
+        test = numpy.empty([length, self.features+1])
+        test[:,self.features] = numpy.reshape(Y_predicted, (length))
         Y_predicted = (self.scaler.inverse_transform(test))[:,self.features]
 
-        test[:,self.features] = numpy.reshape(Y, (166))
+        test[:,self.features] = numpy.reshape(Y, (length))
         Y = (self.scaler.inverse_transform(test))[:,self.features]
 
         #Y = scaler.inverse_transform(Y)
@@ -75,4 +77,14 @@ class LSTM:
 if __name__== '__main__':
     lstm = LSTM()
     #lstm.train_model()
+    X, Y = lstm.create_dataset(lstm.data, lstm.look_back, lstm.features)
+    model = load_model('lstm.h5')
+    Y_predicted = model.predict(X)
+    length = len(Y)
+    test = numpy.empty([length, lstm.features+1])
+    test[:,lstm.features] = numpy.reshape(Y_predicted, (length))
+    Y_predicted = (lstm.scaler.inverse_transform(test))[:,lstm.features]
+
+    for val in Y_predicted:
+        print(str(val)+",")
     lstm.score_model()
