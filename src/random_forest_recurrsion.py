@@ -1,7 +1,10 @@
-from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.model_selection import cross_val_score, GridSearchCV, train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import load_iris
+from sklearn.metrics import mean_squared_error
 import pickle
+import matplotlib.pyplot as plt
+import math
 import numpy as np
 # Random Forest Regression
 class RFR:
@@ -40,23 +43,36 @@ class RFR:
         prediction = rfr.predict(X)
         return prediction
 
-    def score_model(self, X, y):
+    def score_model(self, X, Y):
         with open('data/rfr_model.pickle', 'rb') as handle:
             rfr = pickle.load(handle)
-        return rfr.score(X, y)
+
+        Y_predicted = rfr.predict(X)
+        trainScore = math.sqrt(mean_squared_error(Y, Y_predicted))
+        print('Train Score: %.2f RMSE' % (trainScore))
+
+        plt.plot(Y,'r')
+        plt.plot(Y_predicted, 'k')
+        plt.show()
+        return rfr.score(X, Y)
 
 if __name__== '__main__':
-    with open('data/Stats.pickle', 'rb') as handle:
+    with open('data/Stats2019_with_cr.pickle', 'rb') as handle:
         data = pickle.load(handle)
 
     rfr = RFR()
     data = data.astype(np.float64)
-    X = data[::-1,:11]
-    y = data[::-1,11]
-    print(X[100])
-    print(y[100])
-    #rfr.find_optimal_hyp(X, y)
-    #rfr.train_model(X, y)
-    test = rfr.predict_model(X[100:101,:11])
-    print(test)
-    #print(rfr.score_model(X, y))
+    data = data[::-1]
+    # With the current val what is the next 'future' week value
+    future = 5
+    X = data[:len(data)-future]
+    Y = data[future::,11]
+    x_train, x_test, y_train, y_test = train_test_split(X, Y, shuffle=False)
+
+    rfr.find_optimal_hyp(x_train, y_train)
+    rfr.train_model(x_train, y_train)
+    #predicted_y = rfr.predict_model(x_test)
+    #for val in predicted_y:
+    #    print(str(val)+",")
+
+    print(rfr.score_model(X, Y))
